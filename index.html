@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Happy Birthday 🎀</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Nunito:wght@300;400;600&family=Great+Vibes&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <style>
+      :root {
+        --dp: #c2185b;
+        --mid: #e91e8c;
+        --light: #f8bbd0;
+        --pale: #fce4ec;
+        --blush: #fdf0f5;
+        --dark: #3d0026;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        height: 100%;
+        font-family: "Nunito", sans-serif;
+        background: var(--blush);
+        color: var(--dark);
+        overflow: hidden;
+      }
+
+      #heart-canvas {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .screen {
+        position: relative;
+        z-index: 1;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 22px;
+        overflow: hidden;
+      }
+
+      /* HERO */
+      .hero {
+        text-align: center;
+        padding-top: clamp(28px, 6vh, 52px);
+        flex-shrink: 0;
+      }
+      .ribbon {
+        font-size: 2.4rem;
+        display: block;
+        animation: bop 2s ease-in-out infinite;
+      }
+      .tagline {
+        font-family: "Great Vibes", cursive;
+        font-size: 1.35rem;
+        color: var(--mid);
+        opacity: 0;
+        animation: up 0.9s 0.3s forwards;
+        margin-top: 2px;
+      }
+      .big-title {
+        font-family: "Great Vibes", cursive;
+        font-size: clamp(2.5rem, 11vw, 3.8rem);
+        color: var(--dp);
+        line-height: 1.1;
+        margin: 4px 0 10px;
+        text-shadow: 1px 2px 16px rgba(194, 24, 91, 0.2);
+        opacity: 0;
+        animation: up 0.9s 0.5s forwards;
+      }
+      .dots {
+        display: flex;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 4px;
+        opacity: 0;
+        animation: up 0.9s 0.7s forwards;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--light);
+        transition:
+          background 0.3s,
+          transform 0.3s;
+      }
+      .dot.active {
+        background: var(--mid);
+        transform: scale(1.3);
+      }
+
+      /* SWIPER */
+      .swiper-wrap {
+        flex: 1;
+        width: 100%;
+        max-width: 420px;
+        position: relative;
+        margin-top: clamp(12px, 2.5vh, 22px);
+        padding-bottom: 38px;
+      }
+
+      .card-stack {
+        position: absolute;
+        inset: 0 0 38px 0;
+      }
+
+      .card {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(233, 30, 140, 0.13);
+        border-radius: 26px;
+        padding: 28px 24px 24px;
+        box-shadow:
+          0 14px 44px rgba(194, 24, 91, 0.13),
+          0 2px 8px rgba(194, 24, 91, 0.07);
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+        will-change: transform;
+      }
+      .card:active {
+        cursor: grabbing;
+      }
+
+      .card-emoji {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 13px;
+      }
+      .card-text {
+        font-size: clamp(0.93rem, 4vw, 1.06rem);
+        font-weight: 400;
+        line-height: 1.82;
+        color: var(--dark);
+      }
+      .card-text em {
+        font-family: "Playfair Display", serif;
+        font-style: italic;
+        color: var(--dp);
+      }
+
+      .swipe-hint {
+        position: absolute;
+        bottom: 6px;
+        width: 100%;
+        text-align: center;
+        font-size: 0.74rem;
+        color: var(--mid);
+        opacity: 0.65;
+        letter-spacing: 0.5px;
+        pointer-events: none;
+      }
+
+      /* COUNTER */
+      .counter {
+        flex-shrink: 0;
+        text-align: center;
+        padding: clamp(4px, 1vh, 10px) 0 0;
+        font-size: 0.78rem;
+        color: var(--mid);
+        letter-spacing: 0.5px;
+        opacity: 0.75;
+      }
+
+      /* CLOSING */
+      .closing {
+        flex-shrink: 0;
+        text-align: center;
+        padding: clamp(6px, 1.5vh, 14px) 0 clamp(14px, 3vh, 24px);
+      }
+      .closing-name {
+        font-family: "Great Vibes", cursive;
+        font-size: clamp(1.9rem, 8vw, 2.6rem);
+        color: var(--dp);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .closing-hearts {
+        font-size: 1.2rem;
+        letter-spacing: 6px;
+        color: var(--mid);
+        animation: hpulse 1.6s ease-in-out infinite;
+      }
+      @keyframes hpulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.18);
+        }
+      }
+
+      /* LANG BTN */
+      .lang-btn {
+        position: fixed;
+        bottom: 22px;
+        right: 18px;
+        z-index: 100;
+        background: linear-gradient(135deg, var(--dp), var(--mid));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 12px 20px;
+        font-family: "Nunito", sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 6px 22px rgba(194, 24, 91, 0.38);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.15s;
+      }
+      .lang-btn:active {
+        transform: scale(0.93);
+      }
+
+      @keyframes up {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes bop {
+        0%,
+        100% {
+          transform: translateY(0) rotate(-4deg);
+        }
+        50% {
+          transform: translateY(-9px) rotate(4deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="heart-canvas"></canvas>
+
+    <div class="screen">
+      <div class="hero">
+        <span class="ribbon">🎀</span>
+        <div class="tagline" id="tagline">just for you</div>
+        <div class="big-title" id="bigtitle">Happy Birthday Ana</div>
+        <div class="dots" id="dots"></div>
+      </div>
+
+      <div class="swiper-wrap" id="swiperWrap">
+        <div class="card-stack" id="cardStack"></div>
+        <div class="swipe-hint" id="swipeHint">← swipe to read →</div>
+      </div>
+
+      <div class="counter" id="counter"></div>
+
+      <div class="closing">
+        <span class="closing-name" id="closingName">Con amor 🎀</span>
+        <div class="closing-hearts">♥ ♥ ♥</div>
+      </div>
+    </div>
+
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">
+      🌎 <span id="langLabel">Cambiar a Español</span>
+    </button>
+
+    <script>
+      const cards = [
+        {
+          emoji: "🌸",
+          en: `Honestly Ana, I don't even know where to start. I just know that at some point you showed up in my life and things just… felt different. <em>Better.</em> Like something clicked that I didn't even know was missing.`,
+          es: `La verdad, Ana, no sé ni por dónde empezar. Solo sé que en algún momento apareciste en mi vida y todo se sintió… diferente. <em>Mejor.</em> Como si algo encajara que yo ni sabía que me faltaba.`,
+        },
+        {
+          emoji: "💛",
+          en: `You're one of those people that makes you feel good just by being around. Not because you try to, you just do. <em>That's actually really rare</em>, and I hope you know that about yourself.`,
+          es: `Eres de esas personas que te hacen sentir bien con solo estar cerca. No porque lo intentes, simplemente lo haces. <em>Eso es realmente muy difícil de encontrar</em>, y espero que lo sepas.`,
+        },
+        {
+          emoji: "🌹",
+          en: `There are moments I think back on and realize, that was good because Ana was there. You have this way of making things lighter without even trying. <em>I genuinely don't take that for granted.</em>`,
+          es: `Hay momentos en los que pienso y me doy cuenta, eso fue bueno porque Ana estaba ahí. Tienes esa forma de hacer las cosas más llevaderas sin siquiera intentarlo. <em>De verdad que no lo doy por sentado.</em>`,
+        },
+        {
+          emoji: "✨",
+          en: `I want you to feel today, even just for a second, how much your presence actually matters. Not in a cheesy way, <em>I mean it for real.</em> You've made my life genuinely better and that's just the truth.`,
+          es: `Quiero que sientas hoy, aunque sea por un segundo, cuánto importa tu presencia de verdad. No de manera cursi,<em>lo digo en serio.</em> Has hecho mi vida genuinamente mejor y eso es simplemente la verdad.`,
+        },
+        {
+          emoji: "🎂",
+          en: `Happy birthday, Ana. I hope today is as warm as you make everyone around you feel. <em>You deserve all of it</em>, every good thing, every laugh, every beautiful moment. Thank you for being you. Seriously.`,
+          es: `Feliz cumpleaños, Ana. Espero que hoy sea tan cálido como tú haces sentir a todos los que te rodean. <em>Te mereces todo</em>, cada cosa buena, cada risa, cada momento bonito. Gracias por ser tú. En serio.`,
+        },
+      ];
+
+      let current = 0;
+      let isSpanish = false;
+
+      // ── DOTS ──
+      const dotsEl = document.getElementById("dots");
+      cards.forEach((_, i) => {
+        const d = document.createElement("div");
+        d.className = "dot" + (i === 0 ? " active" : "");
+        d.id = `dot-${i}`;
+        dotsEl.appendChild(d);
+      });
+
+      function updateDots() {
+        cards.forEach((_, i) => {
+          document.getElementById(`dot-${i}`).className =
+            "dot" + (i === current ? " active" : "");
+        });
+      }
+
+      function updateCounter() {
+        document.getElementById("counter").textContent = isSpanish
+          ? `${current + 1} de ${cards.length}`
+          : `${current + 1} of ${cards.length}`;
+      }
+
+      function updateHint() {
+        const h = document.getElementById("swipeHint");
+        if (current >= cards.length - 1) {
+          h.textContent = isSpanish
+            ? "← desliza para volver al inicio →"
+            : "← swipe to start over →";
+        } else {
+          h.textContent = isSpanish
+            ? "← desliza para leer →"
+            : "← swipe to read →";
+        }
+      }
+
+      // ── BUILD STACK ──
+      function buildStack() {
+        const stack = document.getElementById("cardStack");
+        stack.innerHTML = "";
+
+        // Show up to 4 cards starting from current (looping)
+        for (let layer = 3; layer >= 0; layer--) {
+          const idx = (current + layer) % cards.length;
+          const el = document.createElement("div");
+          el.className = "card";
+          el.dataset.index = idx;
+
+          el.innerHTML = `<span class="card-emoji">${cards[idx].emoji}</span>
+      <p class="card-text">${isSpanish ? cards[idx].es : cards[idx].en}</p>`;
+
+          if (layer === 0) {
+            el.style.cssText = `transform:translateY(0) scale(1) rotate(0deg); z-index:10; opacity:1;`;
+            attachDrag(el);
+          } else if (layer === 1) {
+            el.style.cssText = `transform:translateY(11px) scale(0.96) rotate(0.6deg); z-index:9; opacity:0.82; transition:transform 0.35s ease,opacity 0.35s;`;
+          } else if (layer === 2) {
+            el.style.cssText = `transform:translateY(21px) scale(0.92) rotate(-0.5deg); z-index:8; opacity:0.55; transition:transform 0.35s ease,opacity 0.35s;`;
+          } else {
+            el.style.cssText = `transform:translateY(29px) scale(0.88); z-index:7; opacity:0.3; transition:transform 0.35s ease,opacity 0.35s;`;
+          }
+
+          stack.appendChild(el);
+        }
+
+        updateDots();
+        updateCounter();
+        updateHint();
+      }
+
+      // ── DRAG ──
+      let dragging = false,
+        startX = 0,
+        startY = 0,
+        curX = 0,
+        curY = 0,
+        activeCard = null;
+
+      function attachDrag(el) {
+        el.addEventListener("touchstart", onStart, { passive: true });
+        el.addEventListener("touchmove", onMove, { passive: false });
+        el.addEventListener("touchend", onEnd);
+        el.addEventListener("mousedown", onStart);
+      }
+
+      function onStart(e) {
+        dragging = true;
+        activeCard = e.currentTarget;
+        const pt = e.touches ? e.touches[0] : e;
+        startX = pt.clientX;
+        startY = pt.clientY;
+        curX = 0;
+        curY = 0;
+        activeCard.style.transition = "none";
+        activeCard.style.zIndex = "20";
+        if (!e.touches) {
+          window.addEventListener("mousemove", onMove);
+          window.addEventListener("mouseup", onEnd);
+        }
+      }
+
+      function onMove(e) {
+        if (!dragging || !activeCard) return;
+        if (e.cancelable) e.preventDefault();
+        const pt = e.touches ? e.touches[0] : e;
+        curX = pt.clientX - startX;
+        curY = pt.clientY - startY;
+        const rot = curX * 0.065;
+        activeCard.style.transform = `translateX(${curX}px) translateY(${curY * 0.25}px) rotate(${rot}deg) scale(1.025)`;
+
+        // subtle tilt on cards behind
+        const behind1 = activeCard.previousElementSibling;
+        if (behind1) {
+          const prog = Math.min(Math.abs(curX) / (window.innerWidth * 0.32), 1);
+          const sc = 0.96 + prog * 0.04;
+          const ty = 11 - prog * 11;
+          behind1.style.transform = `translateY(${ty}px) scale(${sc}) rotate(0.3deg)`;
+          behind1.style.opacity = 0.82 + prog * 0.18;
+        }
+      }
+
+      function onEnd() {
+        if (!dragging || !activeCard) return;
+        dragging = false;
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onEnd);
+
+        const threshold = window.innerWidth * 0.3;
+
+        if (Math.abs(curX) > threshold) {
+          const dir = curX > 0 ? 1 : -1;
+          activeCard.style.transition =
+            "transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s";
+          activeCard.style.transform = `translateX(${dir * 115}vw) rotate(${dir * 24}deg) scale(0.88)`;
+          activeCard.style.opacity = "0";
+          current = (current + 1) % cards.length;
+          setTimeout(buildStack, 220);
+        } else {
+          activeCard.style.transition =
+            "transform 0.38s cubic-bezier(0.34,1.56,0.64,1)";
+          activeCard.style.transform = "translateY(0) scale(1) rotate(0deg)";
+          activeCard.style.zIndex = "10";
+        }
+        activeCard = null;
+      }
+
+      // ── HEARTS ──
+      const canvas = document.getElementById("heart-canvas");
+      const ctx = canvas.getContext("2d");
+      let W,
+        H,
+        hearts = [];
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      function heartPath(x, y, s) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + s * 0.3);
+        ctx.bezierCurveTo(x, y, x - s * 0.5, y, x - s * 0.5, y + s * 0.3);
+        ctx.bezierCurveTo(
+          x - s * 0.5,
+          y + s * 0.65,
+          x,
+          y + s * 0.9,
+          x,
+          y + s * 1.1,
+        );
+        ctx.bezierCurveTo(
+          x,
+          y + s * 0.9,
+          x + s * 0.5,
+          y + s * 0.65,
+          x + s * 0.5,
+          y + s * 0.3,
+        );
+        ctx.bezierCurveTo(x + s * 0.5, y, x, y, x, y + s * 0.3);
+        ctx.closePath();
+      }
+
+      const COLS = [
+        "rgba(233,30,140,",
+        "rgba(194,24,91,",
+        "rgba(248,187,208,",
+        "rgba(240,98,146,",
+        "rgba(255,105,180,",
+      ];
+
+      function spawn() {
+        return {
+          x: Math.random() * W,
+          y: H + 20,
+          size: 7 + Math.random() * 16,
+          vy: 0.45 + Math.random() * 0.9,
+          vx: (Math.random() - 0.5) * 0.45,
+          op: 0.1 + Math.random() * 0.18,
+          col: COLS[Math.floor(Math.random() * COLS.length)],
+          wobble: Math.random() * Math.PI * 2,
+          ws: 0.016 + Math.random() * 0.018,
+        };
+      }
+      for (let i = 0; i < 30; i++)
+        hearts.push({ ...spawn(), y: Math.random() * H });
+
+      (function drawH() {
+        ctx.clearRect(0, 0, W, H);
+        hearts.forEach((h, i) => {
+          h.y -= h.vy;
+          h.wobble += h.ws;
+          h.x += Math.sin(h.wobble) * 0.4 + h.vx;
+          ctx.save();
+          ctx.globalAlpha = h.op;
+          ctx.fillStyle = h.col + h.op + ")";
+          heartPath(h.x, h.y, h.size);
+          ctx.fill();
+          ctx.restore();
+          if (h.y < -30) hearts[i] = spawn();
+        });
+        requestAnimationFrame(drawH);
+      })();
+
+      // ── LANG TOGGLE ──
+      function toggleLang() {
+        isSpanish = !isSpanish;
+        document.getElementById("langLabel").textContent = isSpanish
+          ? "Switch to English"
+          : "Cambiar a Español";
+        document.getElementById("tagline").textContent = isSpanish
+          ? "solo para ti"
+          : "just for you";
+        document.getElementById("bigtitle").textContent = isSpanish
+          ? "¡Feliz Cumpleaños Ana!"
+          : "Happy Birthday Ana";
+        document.getElementById("closingName").textContent = isSpanish
+          ? "Con amor, siempre 🎀"
+          : "Con amor 🎀";
+        buildStack();
+      }
+
+      buildStack();
+    </script>
+  </body>
+</html>
