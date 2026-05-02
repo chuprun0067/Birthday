@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Nunito:wght@300;400;600&family=Great+Vibes&display=swap"
       rel="stylesheet"
     />
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" type="image/png" href="./logo.png" />
     <style>
       :root {
         --dp: #c2185b;
@@ -211,29 +211,61 @@
         }
       }
 
-      /* LANG BTN */
+      /* LANG BTN — girly light pill */
       .lang-btn {
         position: fixed;
         bottom: 22px;
         right: 18px;
         z-index: 100;
-        background: linear-gradient(135deg, var(--dp), var(--mid));
-        color: white;
-        border: none;
+        background: rgba(255, 240, 248, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1.5px solid rgba(233, 30, 140, 0.18);
         border-radius: 50px;
-        padding: 12px 20px;
-        font-family: "Nunito", sans-serif;
-        font-size: 0.8rem;
-        font-weight: 600;
+        padding: 0;
+        width: 68px;
+        height: 32px;
         cursor: pointer;
-        box-shadow: 0 6px 22px rgba(194, 24, 91, 0.38);
+        box-shadow:
+          0 4px 18px rgba(194, 24, 91, 0.15),
+          0 1px 4px rgba(194, 24, 91, 0.08);
         display: flex;
         align-items: center;
-        gap: 6px;
-        transition: transform 0.15s;
+        position: fixed;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+        overflow: hidden;
       }
       .lang-btn:active {
         transform: scale(0.93);
+      }
+      .lang-seg {
+        flex: 1;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Nunito", sans-serif;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        color: var(--light);
+        transition: color 0.25s;
+        border-radius: 50px;
+      }
+      .lang-seg.active {
+        background: linear-gradient(135deg, var(--dp), var(--mid));
+        color: #fff;
+        margin: 3px;
+        height: calc(100% - 6px);
+        flex: none;
+        width: calc(50% - 3px);
+        border-radius: 50px;
+      }
+      .lang-seg.inactive {
+        color: var(--mid);
+        flex: 1;
       }
 
       @keyframes up {
@@ -281,8 +313,15 @@
       </div>
     </div>
 
-    <button class="lang-btn" id="langBtn" onclick="toggleLang()">
-      🌎 <span id="langLabel">Cambiar a Español</span>
+    <!-- Small elegant language toggle, top-right -->
+    <button
+      class="lang-btn"
+      id="langBtn"
+      onclick="toggleLang()"
+      title="Switch language"
+    >
+      <span class="lang-seg active" id="segEN">EN</span>
+      <span class="lang-seg inactive" id="segES">ES</span>
     </button>
 
     <script>
@@ -357,7 +396,6 @@
         const stack = document.getElementById("cardStack");
         stack.innerHTML = "";
 
-        // Show up to 4 cards starting from current (looping)
         for (let layer = 3; layer >= 0; layer--) {
           const idx = (current + layer) % cards.length;
           const el = document.createElement("div");
@@ -426,7 +464,6 @@
         const rot = curX * 0.065;
         activeCard.style.transform = `translateX(${curX}px) translateY(${curY * 0.25}px) rotate(${rot}deg) scale(1.025)`;
 
-        // subtle tilt on cards behind
         const behind1 = activeCard.previousElementSibling;
         if (behind1) {
           const prog = Math.min(Math.abs(curX) / (window.innerWidth * 0.32), 1);
@@ -544,9 +581,19 @@
       // ── LANG TOGGLE ──
       function toggleLang() {
         isSpanish = !isSpanish;
-        document.getElementById("langLabel").textContent = isSpanish
-          ? "Switch to English"
-          : "Cambiar a Español";
+        document.getElementById("langFlag") &&
+          (document.getElementById("langFlag").textContent = isSpanish
+            ? "🇺🇸"
+            : "🌎");
+        const en = document.getElementById("segEN");
+        const es = document.getElementById("segES");
+        if (isSpanish) {
+          en.className = "lang-seg inactive";
+          es.className = "lang-seg active";
+        } else {
+          en.className = "lang-seg active";
+          es.className = "lang-seg inactive";
+        }
         document.getElementById("tagline").textContent = isSpanish
           ? "solo para ti"
           : "just for you";
