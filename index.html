@@ -7,11 +7,11 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Happy Birthday 🎀</title>
+    <link rel="icon" type="image/png" href="./logo.png" />
     <link
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Nunito:wght@300;400;600&family=Great+Vibes&display=swap"
       rel="stylesheet"
     />
-    <link rel="icon" type="image/png" href="./logo.png" />
     <style>
       :root {
         --dp: #c2185b;
@@ -211,7 +211,7 @@
         }
       }
 
-      /* LANG BTN — girly light pill */
+      /* LANG BTN */
       .lang-btn {
         position: fixed;
         bottom: 22px;
@@ -231,7 +231,6 @@
           0 1px 4px rgba(194, 24, 91, 0.08);
         display: flex;
         align-items: center;
-        position: fixed;
         transition:
           transform 0.15s,
           box-shadow 0.15s;
@@ -266,6 +265,68 @@
       .lang-seg.inactive {
         color: var(--mid);
         flex: 1;
+      }
+
+      /* SPEAKER BTN — top right */
+      .speaker-btn {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 100;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(255, 240, 248, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1.5px solid rgba(233, 30, 140, 0.18);
+        cursor: pointer;
+        box-shadow:
+          0 4px 18px rgba(194, 24, 91, 0.15),
+          0 1px 4px rgba(194, 24, 91, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s,
+          background 0.25s;
+        outline: none;
+      }
+      .speaker-btn:hover {
+        background: rgba(255, 225, 240, 0.98);
+        box-shadow: 0 6px 22px rgba(194, 24, 91, 0.22);
+      }
+      .speaker-btn:active {
+        transform: scale(0.88);
+      }
+
+      /* ripple ring when playing */
+      .speaker-btn.playing::before {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2px solid rgba(233, 30, 140, 0.35);
+        animation: speakerRing 1.4s ease-out infinite;
+      }
+      @keyframes speakerRing {
+        0% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.55);
+        }
+      }
+
+      .speaker-icon {
+        width: 20px;
+        height: 20px;
+        fill: var(--dp);
+        transition: opacity 0.2s;
+        flex-shrink: 0;
       }
 
       @keyframes up {
@@ -313,7 +374,41 @@
       </div>
     </div>
 
-    <!-- Small elegant language toggle, top-right -->
+    <!-- Speaker button top-right -->
+    <button
+      class="speaker-btn"
+      id="speakerBtn"
+      onclick="toggleMusic()"
+      title="Toggle music"
+      aria-label="Toggle music"
+    >
+      <!-- Speaker MUTED icon -->
+      <svg
+        id="iconOff"
+        class="speaker-icon"
+        style="display: none"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"
+        />
+      </svg>
+
+      <!-- Speaker ON icon -->
+      <svg
+        id="iconOn"
+        class="speaker-icon"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+        />
+      </svg>
+    </button>
+
+    <!-- Lang toggle bottom-right -->
     <button
       class="lang-btn"
       id="langBtn"
@@ -581,10 +676,6 @@
       // ── LANG TOGGLE ──
       function toggleLang() {
         isSpanish = !isSpanish;
-        document.getElementById("langFlag") &&
-          (document.getElementById("langFlag").textContent = isSpanish
-            ? "🇺🇸"
-            : "🌎");
         const en = document.getElementById("segEN");
         const es = document.getElementById("segES");
         if (isSpanish) {
@@ -604,6 +695,148 @@
           ? "Con amor, siempre 🎀"
           : "Con amor 🎀";
         buildStack();
+      }
+
+      // ── MUSIC — Happy Birthday tune via Web Audio API ──
+      let audioCtx = null;
+      let isPlaying = false;
+      let stopMusic = null;
+
+      const C4 = 261.63,
+        D4 = 293.66,
+        E4 = 329.63,
+        F4 = 349.23,
+        G4 = 392.0,
+        A4 = 440.0,
+        B4 = 493.88;
+      const C5 = 523.25,
+        D5 = 587.33,
+        E5 = 659.25,
+        F5 = 698.46,
+        G5 = 784.0,
+        A5 = 880.0;
+
+      const HBD_NOTES = [
+        [C4, 0.75],
+        [C4, 0.25],
+        [D4, 1],
+        [C4, 1],
+        [F4, 1],
+        [E4, 2],
+        [C4, 0.75],
+        [C4, 0.25],
+        [D4, 1],
+        [C4, 1],
+        [G4, 1],
+        [F4, 2],
+        [C4, 0.75],
+        [C4, 0.25],
+        [C5, 1],
+        [A4, 1],
+        [F4, 1],
+        [E4, 1],
+        [D4, 1],
+        [B4, 0.75],
+        [B4, 0.25],
+        [A4, 1],
+        [F4, 1],
+        [G4, 1],
+        [F4, 2],
+      ];
+
+      const BPM = 88;
+      const BEAT_SEC = 60 / BPM;
+
+      function playNote(ctx, freq, startTime, duration, gainNode) {
+        const osc = ctx.createOscillator();
+        const env = ctx.createGain();
+
+        osc.connect(env);
+        env.connect(gainNode);
+
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        env.gain.setValueAtTime(0, startTime);
+        env.gain.linearRampToValueAtTime(0.55, startTime + 0.03);
+        env.gain.setValueAtTime(0.42, startTime + duration * 0.6);
+        env.gain.linearRampToValueAtTime(0, startTime + duration);
+
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.05);
+      }
+
+      function startHBD() {
+        if (!audioCtx)
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+
+        const masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+        masterGain.connect(audioCtx.destination);
+
+        const delay = audioCtx.createDelay(0.3);
+        const delayGain = audioCtx.createGain();
+        delay.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+        delayGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        masterGain.connect(delay);
+        delay.connect(delayGain);
+        delayGain.connect(masterGain);
+
+        let t = audioCtx.currentTime + 0.1;
+        const allOscs = [];
+
+        function scheduleLoop() {
+          let loopT = t;
+          HBD_NOTES.forEach(([freq, beats]) => {
+            const dur = beats * BEAT_SEC * 0.92;
+            playNote(audioCtx, freq, loopT, dur, masterGain);
+            loopT += beats * BEAT_SEC;
+          });
+          return loopT;
+        }
+
+        let loopEndTime = scheduleLoop();
+
+        const loopInterval = setInterval(() => {
+          if (!isPlaying) {
+            clearInterval(loopInterval);
+            return;
+          }
+          const now = audioCtx.currentTime;
+          if (loopEndTime - now < 1.0) {
+            t = loopEndTime + 0.3;
+            loopEndTime = scheduleLoop();
+          }
+        }, 400);
+
+        stopMusic = () => {
+          clearInterval(loopInterval);
+          masterGain.gain.linearRampToValueAtTime(
+            0,
+            audioCtx.currentTime + 0.5,
+          );
+        };
+      }
+
+      function toggleMusic() {
+        const btn = document.getElementById("speakerBtn");
+        const on = document.getElementById("iconOn");
+        const off = document.getElementById("iconOff");
+
+        if (!isPlaying) {
+          isPlaying = true;
+          startHBD();
+          btn.classList.add("playing");
+          on.style.display = "block";
+          off.style.display = "none";
+        } else {
+          isPlaying = false;
+          if (stopMusic) stopMusic();
+          btn.classList.remove("playing");
+          on.style.display = "none";
+          off.style.display = "block";
+        }
       }
 
       buildStack();
